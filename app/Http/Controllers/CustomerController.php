@@ -23,6 +23,7 @@ class CustomerController extends Controller
         }
 
         $customers = $query->paginate(15)->withQueryString();
+        $customers = Customer::with('areas')->latest()->paginate(15);
 
         return view('customers.index', compact('customers'));
     }
