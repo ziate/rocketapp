@@ -24,6 +24,7 @@ class DeliveryDriverController extends Controller
         }
 
         $drivers = $query->paginate(15)->withQueryString();
+        $drivers = DeliveryDriver::with(['governorate', 'area'])->latest()->paginate(15);
 
         return view('delivery-drivers.index', compact('drivers'));
     }

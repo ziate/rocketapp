@@ -11,6 +11,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
 use App\Services\ActivityLogger;
+use Illuminate\View\View;
 
 class OrderController extends Controller
 {
@@ -36,6 +37,11 @@ class OrderController extends Controller
         $orderTypes = OrderType::orderBy('name')->get();
 
         return view('orders.index', compact('orders', 'customers', 'orderTypes'));
+        $orders = Order::with(['customer', 'orderType', 'area.governorate', 'deliveryDriver'])
+            ->latest()
+            ->paginate(15);
+
+        return view('orders.index', compact('orders'));
     }
 
     public function create(): View
@@ -47,6 +53,7 @@ class OrderController extends Controller
     }
 
     public function store(Request $request, ActivityLogger $activityLogger): RedirectResponse
+    public function store(Request $request): RedirectResponse
     {
         $data = $request->validate([
             'customer_id' => ['required', 'exists:customers,id'],
@@ -78,6 +85,7 @@ class OrderController extends Controller
             'changed_by' => Auth::id(),
         ]);
         $activityLogger->log('order.created', $order, ['status' => $order->status]);
+        Order::create($data);
 
         return redirect()->route('orders.index')
             ->with('status', 'تم إنشاء الطلب بنجاح.');
@@ -88,11 +96,13 @@ class OrderController extends Controller
         $customers = Customer::with('areas.governorate')->orderBy('name')->get();
         $orderTypes = OrderType::orderBy('name')->get();
         $order->load(['customer', 'orderType', 'area.governorate', 'statusHistories']);
+        $order->load(['customer', 'orderType', 'area.governorate']);
 
         return view('orders.edit', compact('order', 'customers', 'orderTypes'));
     }
 
     public function update(Request $request, Order $order, ActivityLogger $activityLogger): RedirectResponse
+    public function update(Request $request, Order $order): RedirectResponse
     {
         $data = $request->validate([
             'customer_id' => ['required', 'exists:customers,id'],
@@ -133,6 +143,8 @@ class OrderController extends Controller
             'previous_status' => $originalStatus,
         ]);
 
+        $order->update($data);
+
         return redirect()->route('orders.index')
             ->with('status', 'تم تحديث الطلب بنجاح.');
     }
@@ -140,6 +152,8 @@ class OrderController extends Controller
     public function destroy(Order $order, ActivityLogger $activityLogger): RedirectResponse
     {
         $activityLogger->log('order.deleted', $order, ['status' => $order->status]);
+    public function destroy(Order $order): RedirectResponse
+    {
         $order->delete();
 
         return redirect()->route('orders.index')
