@@ -23,6 +23,15 @@
                 </select>
             </div>
             <div class="col-md-6 mb-3">
+                <label class="form-label">تعيين مندوب (اختياري)</label>
+                <select name="delivery_driver_id" class="form-select">
+                    <option value="">بدون تعيين</option>
+                    @foreach($drivers as $driver)
+                        <option value="{{ $driver->id }}" @selected($order->delivery_driver_id === $driver->id)>{{ $driver->name }} - {{ $driver->phone }}</option>
+                    @endforeach
+                </select>
+            </div>
+            <div class="col-md-6 mb-3">
                 <label class="form-label">منطقة العميل</label>
                 <select name="area_id" id="area-select" class="form-select" required>
                     @foreach($order->customer?->areas ?? [] as $area)
@@ -64,6 +73,10 @@
             <div class="col-12 mb-3">
                 <label class="form-label">ملاحظات</label>
                 <textarea name="notes" class="form-control" rows="2">{{ $order->notes }}</textarea>
+            </div>
+            <div class="col-12 mb-3">
+                <label class="form-label">ملاحظة تحديث الحالة (اختياري)</label>
+                <input type="text" name="status_note" class="form-control" placeholder="سبب تغيير الحالة">
             </div>
         </div>
         <button class="btn btn-primary" type="submit">تحديث الطلب</button>

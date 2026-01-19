@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Area;
 use App\Models\Customer;
+use App\Models\DeliveryDriver;
 use App\Models\Order;
 use App\Models\OrderType;
 use Illuminate\Http\RedirectResponse;
@@ -32,6 +33,16 @@ class OrderController extends Controller
             $query->where('order_type_id', request('order_type_id'));
         }
 
+        if (request('delivery_driver_id')) {
+            $query->where('delivery_driver_id', request('delivery_driver_id'));
+        }
+
+        $orders = $query->paginate(15)->withQueryString();
+        $customers = Customer::orderBy('name')->get();
+        $orderTypes = OrderType::orderBy('name')->get();
+        $drivers = DeliveryDriver::orderBy('name')->get();
+
+        return view('orders.index', compact('orders', 'customers', 'orderTypes', 'drivers'));
         $orders = $query->paginate(15)->withQueryString();
         $customers = Customer::orderBy('name')->get();
         $orderTypes = OrderType::orderBy('name')->get();
@@ -48,6 +59,12 @@ class OrderController extends Controller
     {
         $customers = Customer::with('areas.governorate')->orderBy('name')->get();
         $orderTypes = OrderType::where('is_active', true)->orderBy('name')->get();
+        $drivers = DeliveryDriver::orderBy('name')->get();
+
+        return view('orders.create', compact('customers', 'orderTypes', 'drivers'));
+    }
+
+    public function store(Request $request, ActivityLogger $activityLogger): RedirectResponse
 
         return view('orders.create', compact('customers', 'orderTypes'));
     }
@@ -59,6 +76,7 @@ class OrderController extends Controller
             'customer_id' => ['required', 'exists:customers,id'],
             'order_type_id' => ['required', 'exists:order_types,id'],
             'area_id' => ['required', 'exists:areas,id'],
+            'delivery_driver_id' => ['nullable', 'exists:delivery_drivers,id'],
             'recipient_name' => ['required', 'string', 'max:255'],
             'recipient_phone' => ['required', 'string', 'max:30'],
             'recipient_address' => ['required', 'string'],
@@ -95,6 +113,13 @@ class OrderController extends Controller
     {
         $customers = Customer::with('areas.governorate')->orderBy('name')->get();
         $orderTypes = OrderType::orderBy('name')->get();
+        $drivers = DeliveryDriver::orderBy('name')->get();
+        $order->load(['customer', 'orderType', 'area.governorate', 'statusHistories']);
+
+        return view('orders.edit', compact('order', 'customers', 'orderTypes', 'drivers'));
+    }
+
+    public function update(Request $request, Order $order, ActivityLogger $activityLogger): RedirectResponse
         $order->load(['customer', 'orderType', 'area.governorate', 'statusHistories']);
         $order->load(['customer', 'orderType', 'area.governorate']);
 
@@ -108,6 +133,7 @@ class OrderController extends Controller
             'customer_id' => ['required', 'exists:customers,id'],
             'order_type_id' => ['required', 'exists:order_types,id'],
             'area_id' => ['required', 'exists:areas,id'],
+            'delivery_driver_id' => ['nullable', 'exists:delivery_drivers,id'],
             'recipient_name' => ['required', 'string', 'max:255'],
             'recipient_phone' => ['required', 'string', 'max:30'],
             'recipient_address' => ['required', 'string'],
@@ -116,6 +142,7 @@ class OrderController extends Controller
             'notes' => ['nullable', 'string'],
             'scheduled_at' => ['nullable', 'date'],
             'status' => ['nullable', 'string', 'max:50'],
+            'status_note' => ['nullable', 'string', 'max:255'],
         ]);
 
         $data['collect_required'] = $request->boolean('collect_required');
@@ -134,6 +161,7 @@ class OrderController extends Controller
         if ($order->status !== $originalStatus) {
             $order->statusHistories()->create([
                 'status' => $order->status,
+                'notes' => $data['status_note'] ?? 'تحديث حالة الطلب',
                 'notes' => 'تحديث حالة الطلب',
                 'changed_by' => Auth::id(),
             ]);

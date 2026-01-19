@@ -35,6 +35,15 @@
                     @endforeach
                 </select>
             </div>
+            <div class="col-md-4">
+                <label class="form-label">المندوب</label>
+                <select name="delivery_driver_id" class="form-select">
+                    <option value="">الكل</option>
+                    @foreach($drivers as $driver)
+                        <option value="{{ $driver->id }}" @selected(request('delivery_driver_id') == $driver->id)>{{ $driver->name }}</option>
+                    @endforeach
+                </select>
+            </div>
             <div class="col-md-12 d-flex gap-2">
                 <button class="btn btn-secondary" type="submit">تصفية</button>
                 <a class="btn btn-outline-secondary" href="{{ route('orders.index') }}">إعادة ضبط</a>

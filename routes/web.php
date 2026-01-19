@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AreaController;
+use App\Http\Controllers\ActivityLogController;
 use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DeliveryDriverController;
@@ -17,3 +18,4 @@ Route::resource('customers', CustomerController::class);
 Route::resource('delivery-drivers', DeliveryDriverController::class);
 Route::resource('order-types', OrderTypeController::class);
 Route::resource('orders', OrderController::class);
+Route::get('/activity-logs', [ActivityLogController::class, 'index'])->name('activity-logs.index');

@@ -9,5 +9,6 @@
         <a href="{{ route('order-types.index') }}">أنواع الطلبات</a>
         <a href="{{ route('governorates.index') }}">المحافظات</a>
         <a href="{{ route('areas.index') }}">المناطق</a>
+        <a href="{{ route('activity-logs.index') }}">سجل النشاطات</a>
     </nav>
 </div>

@@ -24,6 +24,15 @@
                 </select>
             </div>
             <div class="col-md-6 mb-3">
+                <label class="form-label">تعيين مندوب (اختياري)</label>
+                <select name="delivery_driver_id" class="form-select">
+                    <option value="">بدون تعيين</option>
+                    @foreach($drivers as $driver)
+                        <option value="{{ $driver->id }}">{{ $driver->name }} - {{ $driver->phone }}</option>
+                    @endforeach
+                </select>
+            </div>
+            <div class="col-md-6 mb-3">
                 <label class="form-label">منطقة العميل</label>
                 <select name="area_id" id="area-select" class="form-select" required>
                     <option value="">اختر المنطقة</option>
