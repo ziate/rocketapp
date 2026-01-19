@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>دليل تثبيت المشروع على الاستضافة المشتركة</title>
+    <style>
+        body { font-family: "Tahoma", "Arial", sans-serif; background: #f8fafc; color: #111827; margin: 0; }
+        header { background: #1f2937; color: #fff; padding: 24px; }
+        main { max-width: 960px; margin: 0 auto; padding: 24px; }
+        h1, h2 { margin: 0 0 12px; }
+        h2 { margin-top: 32px; color: #111827; }
+        .card { background: #fff; border-radius: 12px; padding: 20px; box-shadow: 0 10px 24px rgba(0,0,0,0.08); margin-bottom: 16px; }
+        ol { padding-right: 18px; }
+        code, pre { background: #f3f4f6; padding: 4px 8px; border-radius: 6px; display: inline-block; }
+        pre { display: block; padding: 12px; overflow-x: auto; }
+        .note { background: #ecfeff; border: 1px solid #22d3ee; padding: 12px; border-radius: 8px; }
+        .warn { background: #fff7ed; border: 1px solid #fdba74; padding: 12px; border-radius: 8px; }
+        footer { text-align: center; padding: 16px; color: #6b7280; }
+    </style>
+</head>
+<body>
+<header>
+    <h1>دليل تثبيت وإعداد المشروع بالكامل على الاستضافة المشتركة</h1>
+    <p>هذا الدليل يشرح خطوة بخطوة كيفية تجهيز Laravel على استضافة مشتركة بدون Node.js.</p>
+</header>
+
+<main>
+    <div class="card">
+        <h2>1) المتطلبات الأساسية</h2>
+        <ul>
+            <li>PHP 8.1 أو أحدث.</li>
+            <li>Composer (يفضل على جهازك المحلي).</li>
+            <li>قاعدة بيانات MySQL أو MariaDB.</li>
+            <li>حساب استضافة مشتركة مع cPanel أو مشابه.</li>
+        </ul>
+    </div>
+
+    <div class="card">
+        <h2>2) تجهيز المشروع محليًا</h2>
+        <ol>
+            <li>أنشئ مشروع Laravel محليًا:</li>
+        </ol>
+        <pre>composer create-project laravel/laravel delivery-app</pre>
+        <ol start="2">
+            <li>انسخ ملفات هذا المشروع داخل مجلد Laravel الجديد (استبدال الملفات).</li>
+            <li>أنشئ ملف البيئة:</li>
+        </ol>
+        <pre>cp .env.example .env
+php artisan key:generate</pre>
+        <div class="note">يمكنك تعديل إعدادات قاعدة البيانات في ملف <strong>.env</strong> بعد إنشائها على الاستضافة.</div>
+    </div>
+
+    <div class="card">
+        <h2>3) إنشاء قاعدة البيانات على الاستضافة</h2>
+        <ol>
+            <li>ادخل إلى cPanel &gt; MySQL Databases.</li>
+            <li>أنشئ قاعدة بيانات جديدة.</li>
+            <li>أنشئ مستخدمًا جديدًا.</li>
+            <li>اربط المستخدم بقاعدة البيانات مع صلاحيات كاملة.</li>
+            <li>احتفظ باسم القاعدة واسم المستخدم وكلمة المرور لاستخدامها في ملف .env.</li>
+        </ol>
+    </div>
+
+    <div class="card">
+        <h2>4) رفع الملفات للاستضافة</h2>
+        <ol>
+            <li>ارفع مشروع Laravel بالكامل إلى مجلد خارج <strong>public_html</strong> (مثال: <strong>app</strong>).</li>
+            <li>انقل مجلد <strong>public</strong> إلى <strong>public_html</strong> أو حدّد Document Root على public.</li>
+            <li>عدل مسارات index.php داخل <strong>public_html</strong> لتشير إلى مجلد المشروع:</li>
+        </ol>
+        <pre>require __DIR__.'/../app/vendor/autoload.php';
+$app = require_once __DIR__.'/../app/bootstrap/app.php';</pre>
+    </div>
+
+    <div class="card">
+        <h2>5) ضبط ملف البيئة (.env)</h2>
+        <ol>
+            <li>افتح ملف <strong>.env</strong> داخل مجلد المشروع.</li>
+            <li>حدّث بيانات قاعدة البيانات:</li>
+        </ol>
+        <pre>DB_DATABASE=database_name
+DB_USERNAME=database_user
+DB_PASSWORD=database_password</pre>
+        <div class="warn">تأكد من ضبط <strong>APP_ENV=production</strong> و <strong>APP_DEBUG=false</strong>.</div>
+    </div>
+
+    <div class="card">
+        <h2>6) تشغيل المايجريشن</h2>
+        <p>إذا كانت الاستضافة توفر SSH:</p>
+        <pre>php artisan migrate --force</pre>
+        <p>إذا لم يتوفر SSH، استخدم أداة phpMyAdmin لاستيراد قاعدة البيانات بعد تشغيل المايجريشن محليًا.</p>
+    </div>
+
+    <div class="card">
+        <h2>7) ضبط الصلاحيات</h2>
+        <ol>
+            <li>تأكد من صلاحيات الكتابة على:</li>
+        </ol>
+        <pre>storage/
+bootstrap/cache/</pre>
+        <p>اضبطها على 755 أو 775 حسب الاستضافة.</p>
+    </div>
+
+    <div class="card">
+        <h2>8) اختبار النظام</h2>
+        <ol>
+            <li>افتح رابط الموقع.</li>
+            <li>تأكد من ظهور لوحة التحكم الرئيسية.</li>
+            <li>أضف محافظة ومنطقة وعميل ثم جرّب إنشاء طلب.</li>
+        </ol>
+    </div>
+</main>
+
+<footer>
+    تم إعداد هذا الدليل لتسهيل نشر المشروع على الاستضافة المشتركة.
+</footer>
+</body>
+</html>
