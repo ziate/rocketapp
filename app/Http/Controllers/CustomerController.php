@@ -12,6 +12,17 @@ class CustomerController extends Controller
 {
     public function index(): View
     {
+        $query = Customer::with('areas')->latest();
+
+        if (request('search')) {
+            $search = request('search');
+            $query->where(function ($builder) use ($search) {
+                $builder->where('name', 'like', "%{$search}%")
+                    ->orWhere('phone', 'like', "%{$search}%");
+            });
+        }
+
+        $customers = $query->paginate(15)->withQueryString();
         $customers = Customer::with('areas')->latest()->paginate(15);
 
         return view('customers.index', compact('customers'));

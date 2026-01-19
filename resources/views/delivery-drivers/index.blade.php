@@ -5,6 +5,20 @@
         <h2>مناديب التوصيل</h2>
         <a class="btn btn-primary" href="{{ route('delivery-drivers.create') }}">إضافة مندوب</a>
     </div>
+
+    <form class="card p-3 mb-3 shadow-sm" method="GET" action="{{ route('delivery-drivers.index') }}">
+        <div class="row g-3 align-items-end">
+            <div class="col-md-6">
+                <label class="form-label">بحث بالاسم أو الهاتف</label>
+                <input type="text" name="search" value="{{ request('search') }}" class="form-control" placeholder="مثال: محمد أو 011">
+            </div>
+            <div class="col-md-6 d-flex gap-2">
+                <button class="btn btn-secondary" type="submit">بحث</button>
+                <a class="btn btn-outline-secondary" href="{{ route('delivery-drivers.index') }}">إعادة ضبط</a>
+            </div>
+        </div>
+    </form>
+
     <div class="card shadow-sm">
         <div class="table-responsive">
             <table class="table mb-0">

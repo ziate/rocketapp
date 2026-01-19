@@ -69,6 +69,34 @@
         <button class="btn btn-primary" type="submit">تحديث الطلب</button>
     </form>
 
+    <div class="card shadow-sm mt-4">
+        <div class="card-header">سجل حالات الطلب</div>
+        <div class="table-responsive">
+            <table class="table mb-0">
+                <thead>
+                <tr>
+                    <th>الحالة</th>
+                    <th>الملاحظات</th>
+                    <th>التاريخ</th>
+                </tr>
+                </thead>
+                <tbody>
+                @forelse($order->statusHistories as $history)
+                    <tr>
+                        <td>{{ $history->status }}</td>
+                        <td>{{ $history->notes }}</td>
+                        <td>{{ $history->created_at }}</td>
+                    </tr>
+                @empty
+                    <tr>
+                        <td colspan="3">لا يوجد سجل بعد.</td>
+                    </tr>
+                @endforelse
+                </tbody>
+            </table>
+        </div>
+    </div>
+
     <script>
         const customerSelect = document.getElementById('customer-select');
         const areaSelect = document.getElementById('area-select');

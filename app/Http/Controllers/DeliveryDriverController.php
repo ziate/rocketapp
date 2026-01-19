@@ -13,6 +13,17 @@ class DeliveryDriverController extends Controller
 {
     public function index(): View
     {
+        $query = DeliveryDriver::with(['governorate', 'area'])->latest();
+
+        if (request('search')) {
+            $search = request('search');
+            $query->where(function ($builder) use ($search) {
+                $builder->where('name', 'like', "%{$search}%")
+                    ->orWhere('phone', 'like', "%{$search}%");
+            });
+        }
+
+        $drivers = $query->paginate(15)->withQueryString();
         $drivers = DeliveryDriver::with(['governorate', 'area'])->latest()->paginate(15);
 
         return view('delivery-drivers.index', compact('drivers'));

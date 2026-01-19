@@ -8,12 +8,35 @@ use App\Models\Order;
 use App\Models\OrderType;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\View\View;
+use App\Services\ActivityLogger;
 use Illuminate\View\View;
 
 class OrderController extends Controller
 {
     public function index(): View
     {
+        $query = Order::with(['customer', 'orderType', 'area.governorate', 'deliveryDriver'])
+            ->latest();
+
+        if (request('status')) {
+            $query->where('status', request('status'));
+        }
+
+        if (request('customer_id')) {
+            $query->where('customer_id', request('customer_id'));
+        }
+
+        if (request('order_type_id')) {
+            $query->where('order_type_id', request('order_type_id'));
+        }
+
+        $orders = $query->paginate(15)->withQueryString();
+        $customers = Customer::orderBy('name')->get();
+        $orderTypes = OrderType::orderBy('name')->get();
+
+        return view('orders.index', compact('orders', 'customers', 'orderTypes'));
         $orders = Order::with(['customer', 'orderType', 'area.governorate', 'deliveryDriver'])
             ->latest()
             ->paginate(15);
@@ -29,6 +52,7 @@ class OrderController extends Controller
         return view('orders.create', compact('customers', 'orderTypes'));
     }
 
+    public function store(Request $request, ActivityLogger $activityLogger): RedirectResponse
     public function store(Request $request): RedirectResponse
     {
         $data = $request->validate([
@@ -54,6 +78,13 @@ class OrderController extends Controller
             $data['collect_amount'] = null;
         }
 
+        $order = Order::create($data);
+        $order->statusHistories()->create([
+            'status' => $order->status,
+            'notes' => 'إنشاء الطلب',
+            'changed_by' => Auth::id(),
+        ]);
+        $activityLogger->log('order.created', $order, ['status' => $order->status]);
         Order::create($data);
 
         return redirect()->route('orders.index')
@@ -64,11 +95,13 @@ class OrderController extends Controller
     {
         $customers = Customer::with('areas.governorate')->orderBy('name')->get();
         $orderTypes = OrderType::orderBy('name')->get();
+        $order->load(['customer', 'orderType', 'area.governorate', 'statusHistories']);
         $order->load(['customer', 'orderType', 'area.governorate']);
 
         return view('orders.edit', compact('order', 'customers', 'orderTypes'));
     }
 
+    public function update(Request $request, Order $order, ActivityLogger $activityLogger): RedirectResponse
     public function update(Request $request, Order $order): RedirectResponse
     {
         $data = $request->validate([
@@ -95,12 +128,30 @@ class OrderController extends Controller
             $data['collect_amount'] = null;
         }
 
+        $originalStatus = $order->status;
+        $order->update($data);
+
+        if ($order->status !== $originalStatus) {
+            $order->statusHistories()->create([
+                'status' => $order->status,
+                'notes' => 'تحديث حالة الطلب',
+                'changed_by' => Auth::id(),
+            ]);
+        }
+        $activityLogger->log('order.updated', $order, [
+            'status' => $order->status,
+            'previous_status' => $originalStatus,
+        ]);
+
         $order->update($data);
 
         return redirect()->route('orders.index')
             ->with('status', 'تم تحديث الطلب بنجاح.');
     }
 
+    public function destroy(Order $order, ActivityLogger $activityLogger): RedirectResponse
+    {
+        $activityLogger->log('order.deleted', $order, ['status' => $order->status]);
     public function destroy(Order $order): RedirectResponse
     {
         $order->delete();
